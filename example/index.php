@@ -1,6 +1,6 @@
 <?php
 require_once('../src/FullContact/FullContactAPIException.php');
-require_once('../src/FullContact/FullContact.php');
+require_once('../src/FullContact/FullContactAPI.php');
 
 //initialize our FullContact API object
 //get your api key here:  http://fullcontact.com/getkey
