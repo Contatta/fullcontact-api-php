@@ -73,59 +73,77 @@ class FullContactAPI {
     /****************************************************************************/
     /****************************************************************************/
 
+    /**
+     * @param $json_endpoint
+     * @return bool|mixed|string
+     */
+    private function request($json_endpoint) {
+        $curl_handle=curl_init();
+        curl_setopt($curl_handle,CURLOPT_URL,$json_endpoint);
+        curl_setopt($curl_handle,CURLOPT_CONNECTTIMEOUT,3);
+        curl_setopt($curl_handle,CURLOPT_RETURNTRANSFER,1);
+        $buffer = curl_exec($curl_handle);
+        curl_close($curl_handle);
+        $buffer = utf8_encode($buffer);
+        if (empty($buffer))  {
+            return false;
+        } else {
+            return ($buffer);
+        }
+    }
+
     /*********************************
      **** PRIVATE helper function ****
      *********************************/
-    /**
-     * @param string $json_endpoint
-     * @return array|mixed
-     * @throws FullContactAPIException
-     */
-    private function restHelper($json_endpoint) {
+    function restHelper($json_endpoint) {
 
         $return_value = null;
 
-        $http_params = array(
-            'http' => array(
-                'method' => "GET",
-                'ignore_errors' => true
-        ));
+        $stream_contents = $this->request($json_endpoint);
+        if ($stream_contents !== false) {
 
-        $curl = curl_init($json_endpoint);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($curl, CURLOPT_USERAGENT, self::FC_USER_AGENT);
+            if (strlen($stream_contents) > 0) {
 
-        $response = curl_exec($curl);
+                //We're receiving stream data back from the API, json decode it here.
+                $result = json_decode($stream_contents, true);
 
-        if ($response) {
-            //Save the response code in case of error
-            $curl_response_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+                //if result is NULL we have some sort of error
+                if ($result === null) {
 
-            //We're receiving stream data back from the API, json decode it here.
-            $result = json_decode($response, true);
+                    $return_value = array();
+                    $return_value['is_error'] = true;
 
-            //if result is NULL we have some sort of error
-            if ($result === null) {
-                $return_value = array();
-                $return_value['is_error'] = true;
+                    //does the stream meta data give us something to go on?
+                    if (isset($stream_meta_data['wrapper_data'][0])) {
 
-                if (strpos($curl_response_code, "403") !== false) {
-                    $return_value['error_message'] = "Your API key is invalid, missing, or has exceeded its quota.";
+                        $return_value['http_header_error_message'] = $stream_meta_data['wrapper_data'][0];
+                        /*
+                         * IN this case the response status (422 or 403) is in the stream_meta_data
+                         * object.  We'll grab it and return it to the user.
+                         *
+                         * This occurs if:
+                         *  -Invalid email address
+                         *  -Invalid or over limit API key
+                         */
+                        if (strpos($stream_meta_data['wrapper_data'][0], "403") !== false) {
+                            $return_value['error_message'] = "Your API key is invalid, missing, or has exceeded its quota.";
 
-                } else if (strpos($curl_response_code, "422") !== false) {
-                    $return_value['error_message'] = "The server understood the content type and syntax of the request but was unable to process the contained instructions (Invalid email).";
+                        } else if (strpos($stream_meta_data['wrapper_data'][0], "422") !== false) {
+                            $return_value['error_message'] = "The server understood the content type and syntax of the request but was unable to process the contained instructions (Invalid email).";
+                        }
+                    }//end if (isset)
+
+                } else {
+
+                    $result['is_error'] = false;
+                    $return_value = $result;
                 }
+            }//end if (strlen)
 
-            } else {
-                $result['is_error'] = false;
-                $return_value = $result;
-            }// end inner else
-
+            //The stream_contents failed.
         } else {
-            throw new FullContactAPIException("$json_endpoint failed");
+            throw new \Exception("$json_endpoint failed");
         }//end outer else
-
-        curl_close($curl);
 
         return $return_value;
     }//end restHelper
