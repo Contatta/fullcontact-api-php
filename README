@@ -1,0 +1,2 @@
+Note that this is NOT exactly the same as the fullcontact-api-php from FullContact.
+This one is namespaced and composer-ized.  Enjoy!
