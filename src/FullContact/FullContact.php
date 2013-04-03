@@ -13,28 +13,31 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
  */
-define ("FC_BASE_URL", "https://api.fullcontact.com/");
-define ("FC_API_VERSION", "v2");
-define ("FC_USER_AGENT", "FullContact/PHP 0.2");
-
-class FullContactAPIException extends Exception{
-
-}
-
+namespace FullContact;
+/**
+ * Class FullContactAPI
+ * @package FullContact
+ */
 class FullContactAPI {
+    const FC_BASE_URL = "https://api.fullcontact.com/";
+    const FC_API_VERSION = "v2";
+    const FC_USER_AGENT = "FullContact/PHP 0.2";
 
-    private $_apiKey = null;
+    /**
+     * @var string
+     */
+    private $_apiKey;
 
     /**
      * Supported lookup methods
-     * @var $_supportedMethods
+     * @var array
      */
     private $_supportedMethods = array('email', 'phone', 'twitter', 'facebookUsername');
-    /*
-    *
-    * @param String $token_id
-    *
-    */
+
+    /**
+     * Construct API
+     * @param string $api_key
+     */
     public function __construct($api_key) {
         $this->_apiKey = $api_key;
     }
@@ -57,7 +60,7 @@ class FullContactAPI {
 
         if ($term != null) {
 
-            $result = $this->restHelper(FC_BASE_URL . FC_API_VERSION . "/person.json?{$type}=" . urlencode($term) . "&apiKey=" . urlencode($this->_apiKey) . "&timeoutSeconds=" . urlencode($timeout));
+            $result = $this->restHelper(self::FC_BASE_URL . self::FC_API_VERSION . "/person.json?{$type}=" . urlencode($term) . "&apiKey=" . urlencode($this->_apiKey) . "&timeoutSeconds=" . urlencode($timeout));
 
             if ($result != null) {
                 $return_value = $result;
@@ -73,7 +76,12 @@ class FullContactAPI {
     /*********************************
      **** PRIVATE helper function ****
      *********************************/
-    function restHelper($json_endpoint) {
+    /**
+     * @param string $json_endpoint
+     * @return array|mixed
+     * @throws FullContactAPIException
+     */
+    private function restHelper($json_endpoint) {
 
         $return_value = null;
 
@@ -85,7 +93,7 @@ class FullContactAPI {
 
         $curl = curl_init($json_endpoint);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($curl, CURLOPT_USERAGENT, FC_USER_AGENT);
+        curl_setopt($curl, CURLOPT_USERAGENT, self::FC_USER_AGENT);
 
         $response = curl_exec($curl);
 
@@ -114,7 +122,7 @@ class FullContactAPI {
             }// end inner else
 
         } else {
-            throw new Exception("$verb $json_endpoint failed");
+            throw new FullContactAPIException("$json_endpoint failed");
         }//end outer else
 
         curl_close($curl);
@@ -122,4 +130,3 @@ class FullContactAPI {
         return $return_value;
     }//end restHelper
 }//end FullContactAPI
-?>

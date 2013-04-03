@@ -1,0 +1,20 @@
+{
+    "name": "fullcontact/fullcontact",
+    "description": "FullContact API",
+    "type": "library",
+    "keywords": [
+        "fullcontact",
+        "search",
+        "people"
+    ],
+    "homepage": "http://www.fullcontact.com/",
+    "license": "Apache License V2.0",
+    "require": {
+        "php": ">=5.3.3"
+    },
+    "autoload": {
+        "psr-0": {
+            "FullContact\\": "src/"
+        }
+    }
+}
