@@ -51,7 +51,7 @@ class FullContactAPI {
     *
     * @return Array - All information associated with this email address
     */
-    public function doLookup($term = null, $type="email", $timeout = 30) {
+    public function doLookup($term = null, $type="email") {
         if(!in_array($type, $this->_supportedMethods)){
             throw new FullContactAPIException("UnsupportedLookupMethodException: Invalid lookup method specified [{$type}]");
         }
@@ -60,7 +60,8 @@ class FullContactAPI {
 
         if ($term != null) {
 
-            $result = $this->restHelper(self::FC_BASE_URL . self::FC_API_VERSION . "/person.json?{$type}=" . urlencode($term) . "&apiKey=" . urlencode($this->_apiKey) . "&timeoutSeconds=" . urlencode($timeout));
+            $result = $this->restHelper(self::FC_BASE_URL . self::FC_API_VERSION 
+            . "/person.json?{$type}=" . urlencode($term) . "&apiKey=" . urlencode($this->_apiKey));
 
             if ($result != null) {
                 $return_value = $result;
